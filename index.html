@@ -1,0 +1,214 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Shopify Apple Style Calculator</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<style>
+:root{
+  --bg:#ECEBFA;
+  --card:#F6F5FF;
+  --screen:#EDECFB;
+  --btn:#EFEFFF;
+  --primary:#4F46E5;
+  --danger:#FCA5A5;
+  --text:#1F2937;
+}
+
+*{
+  box-sizing:border-box;
+  font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto
+}
+
+body{
+  margin:0;
+  background:var(--bg);
+  display:flex;
+  justify-content:center;
+  align-items:center;
+  min-height:100vh;
+}
+
+.calculator{
+  width:330px;
+  background:var(--card);
+  border-radius:30px;
+  padding:18px;
+  box-shadow:0 30px 60px rgba(0,0,0,.2);
+}
+
+.screen{
+  background:var(--screen);
+  border-radius:22px;
+  padding:16px;
+  text-align:right;
+  margin-bottom:18px;
+}
+
+.expression{
+  font-size:13px;
+  color:#6B7280;
+  min-height:18px;
+}
+
+.result{
+  font-size:36px;
+  font-weight:600;
+  color:var(--text);
+}
+
+.buttons{
+  display:grid;
+  grid-template-columns:repeat(4,1fr);
+  gap:12px;
+}
+
+button{
+  height:58px;
+  border:none;
+  border-radius:20px;
+  font-size:18px;
+  background:var(--btn);
+  color:var(--text);
+  cursor:pointer;
+  box-shadow:0 8px 16px rgba(0,0,0,.1);
+  transition:transform .12s ease, box-shadow .12s ease;
+}
+
+button:active{
+  transform:scale(.94);
+  box-shadow:0 4px 8px rgba(0,0,0,.12);
+}
+
+.operator{font-weight:600}
+
+.clear{
+  background:var(--danger);
+  color:#7F1D1D;
+}
+
+/* BIG EQUAL BUTTON – APPLE FEEL */
+.equal{
+  background:linear-gradient(180deg,#5B54F6,#4338CA);
+  color:white;
+  font-size:22px;
+  font-weight:600;
+  grid-row:span 2;
+  height:100%;
+  border-radius:24px;
+}
+
+.equal:active{
+  transform:scale(.96);
+}
+
+.zero{grid-column:span 2}
+</style>
+</head>
+
+<body>
+
+<div class="calculator">
+  <div class="screen">
+    <div class="expression" id="expression"></div>
+    <div class="result" id="result">0</div>
+  </div>
+
+  <div class="buttons">
+    <button onclick="press('(')">(</button>
+    <button onclick="press(')')">)</button>
+    <button onclick="press('sqrt')">√</button>
+    <button onclick="press('square')">x²</button>
+
+    <button onclick="press('%')" class="operator">%</button>
+    <button onclick="press('/')" class="operator">÷</button>
+    <button onclick="press('*')" class="operator">×</button>
+    <button onclick="clearAll()" class="clear">C</button>
+
+    <button onclick="press('7')">7</button>
+    <button onclick="press('8')">8</button>
+    <button onclick="press('9')">9</button>
+    <button onclick="press('-')" class="operator">−</button>
+
+    <button onclick="press('4')">4</button>
+    <button onclick="press('5')">5</button>
+    <button onclick="press('6')">6</button>
+    <button onclick="press('+')" class="operator">+</button>
+
+    <button onclick="press('1')">1</button>
+    <button onclick="press('2')">2</button>
+    <button onclick="press('3')">3</button>
+    <button onclick="calculate()" class="equal">=</button>
+
+    <button onclick="press('0')" class="zero">0</button>
+    <button onclick="press('.')">.</button>
+  </div>
+</div>
+
+<script>
+let exp = "";
+let currentValue = 0;
+
+function haptic(){
+  if(navigator.vibrate) navigator.vibrate(12);
+}
+
+function press(val){
+  haptic();
+  if(val === "sqrt"){
+    exp = `Math.sqrt(${exp || 0})`;
+  }
+  else if(val === "square"){
+    exp = `(${exp || 0})**2`;
+  }
+  else{
+    exp += val;
+  }
+  update();
+}
+
+function animateNumber(from,to){
+  const el = document.getElementById("result");
+  const start = performance.now();
+  const duration = 140;
+
+  function frame(now){
+    const p = Math.min((now-start)/duration,1);
+    const v = from + (to-from)*p;
+    el.innerText = Math.round(v).toLocaleString();
+    if(p<1) requestAnimationFrame(frame);
+  }
+  requestAnimationFrame(frame);
+}
+
+function calculate(){
+  haptic();
+  try{
+    const val = Function("return "+exp)();
+    animateNumber(currentValue,val);
+    currentValue = val;
+    exp = val.toString();
+    document.getElementById("expression").innerText = "";
+  }catch{
+    document.getElementById("result").innerText="Error";
+    exp="";
+  }
+}
+
+function clearAll(){
+  haptic();
+  exp="";
+  currentValue=0;
+  document.getElementById("expression").innerText="";
+  document.getElementById("result").innerText="0";
+}
+
+function update(){
+  document.getElementById("expression").innerText =
+    exp.replace(/\*/g,"×").replace(/\//g,"÷");
+}
+</script>
+
+</body>
+</html>
